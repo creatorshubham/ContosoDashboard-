@@ -84,10 +84,10 @@ Users need to share documents with specific colleagues or teams and attach relev
 - **FR-001**: The system MUST allow users to select one or more supported files from their device for upload.
 - **FR-002**: The system MUST enforce a supported file-type allow-list for uploads, including PDF, common Microsoft Office formats, text documents, and common image formats.
 - **FR-003**: The system MUST reject uploads that exceed the 25 MB per-file limit and show a clear error message to the user.
-- **FR-004**: The system MUST show upload progress during file transfer and display a final success or error result after processing completes.
+- **FR-004**: The system MUST show upload progress during file transfer and display an upload-accepted, scan-pending, clean, quarantined, or error result as asynchronous processing completes.
 - **FR-005**: The system MUST require a document title and category for each uploaded document and allow optional description, project association, and custom tags.
 - **FR-006**: The system MUST automatically capture upload date and time, uploader identity, file size, and file type metadata when a document is stored.
-- **FR-007**: The system MUST validate uploaded files before storage using a locally available antivirus scanner and reject unsafe or unsupported content. If scanning cannot be completed, the system MUST quarantine the file or reject the upload and MUST NOT make the file available for viewing or download.
+- **FR-007**: The system MUST validate uploaded files before making them available using an asynchronous virus-scanning workflow. Hosted deployments MUST enqueue scan work to Azure Queue Storage for an Azure Functions Queue Storage trigger; offline training MUST use a local scanner or local background adapter. Unsafe files, files whose scans cannot complete, and files with exhausted scan retries MUST be quarantined or rejected and MUST NOT be available for viewing or download.
 - **FR-008**: The system MUST store uploaded files securely, with generated internal identifiers and access rules that prevent unauthorized viewing or tampering.
 - **FR-009**: The system MUST allow users to view a list of their uploaded documents, including document title, category, upload date, file size, and associated project.
 - **FR-010**: The system MUST allow users to sort documents by title, upload date, category, and file size.
@@ -113,7 +113,7 @@ Users need to share documents with specific colleagues or teams and attach relev
 
 ### Key Entities *(include if feature involves data)*
 
-- **Document**: Represents a stored work file, including title, description, category, project association, uploader, file metadata, upload date, tags, access permissions, and lifecycle state (active, soft-deleted, or permanently purged) with the soft-deletion timestamp.
+- **Document**: Represents a stored work file, including title, description, category, project association, uploader, file metadata, upload date, tags, access permissions, scan state (pending, clean, quarantined, or failed), and lifecycle state (active, soft-deleted, or permanently purged) with the soft-deletion timestamp.
 - **Project**: Represents the business context under which documents may be uploaded, shared, and viewed by assigned team members.
 - **User**: Represents a dashboard user whose role determines what document actions they may take, including upload, share, and administrative review.
 - **Document Share**: Represents a permission relationship between a document and a user or team so the document may be viewed or downloaded by recipients.
@@ -136,6 +136,7 @@ Users need to share documents with specific colleagues or teams and attach relev
 - Most uploaded files are ordinary business documents and images that are within the supported file-type and size limits.
 - Project and team membership data already exist and can be used to control document access.
 - The dashboard environment supports local file storage for the training application while keeping the design compatible with future storage abstraction.
+- Hosted deployments may use Azure Queue Storage and an Azure Functions Queue Storage trigger for asynchronous virus scanning; offline training uses the local adapter instead.
 - Administrators need access to activity and audit data to support compliance, internal reviews, and operational reporting.
 - Soft-deleted documents and their stored files remain recoverable for exactly 90 days; after that period, both are permanently purged.
 
@@ -144,5 +145,5 @@ Users need to share documents with specific colleagues or teams and attach relev
 - Real-time collaborative document editing or multi-user co-authoring.
 - Version history or rollback workflows.
 - Advanced approval routing or formal document lifecycle management.
-- External third-party storage integrations beyond the planned future abstraction.
+- External third-party storage integrations beyond the planned storage and scan abstractions.
 - Mobile-specific document features beyond the web-based dashboard experience.
