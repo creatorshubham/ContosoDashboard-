@@ -5,6 +5,15 @@
 **Status**: Draft  
 **Input**: User description: `StakeholderDocs/document-upload-and-management-feature.md`
 
+## Clarifications
+
+### Session 2026-09-15
+
+- Q: How should uploaded files be checked for malware? → A: Use a locally available antivirus scanner; quarantine or reject files if scanning cannot be completed.
+- Q: Which roles may manage uploaded documents? → A: Owners manage their own documents; project managers manage documents in their projects; administrators have global oversight and management access.
+- Q: Which roles may edit metadata, replace files, share documents, and delete documents? → A: Owners, project managers within their projects, and administrators globally may edit metadata, replace files, share documents, and delete documents.
+- Q: What should happen after a document is soft-deleted? → A: Keep the document and stored file recoverable for 90 days, allow eligible managers to restore it, then permanently purge both the document record and stored file.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Upload secure work documents (Priority: P1)
@@ -25,11 +34,13 @@ An employee needs a reliable way to upload work-related files into the dashboard
 
 ### User Story 2 - Find and manage documents by project and role (Priority: P1)
 
-Employees, team leads, project managers, and administrators must be able to locate documents they are allowed to view, organize them by category and project, and manage files in their assigned areas without accessing unrelated content.
+Employees, team leads, project managers, and administrators must be able to locate documents they are allowed to view, organize them by category and project, and manage files within their permitted scope without accessing unrelated content. Owners manage their own documents, project managers manage documents in their projects, and administrators have global oversight and management access.
 
 **Why this priority**: Users need confidence that documents are discoverable and protected by the right permissions before the feature can provide real operational value.
 
 **Independent Test**: A user can browse a personal list, filter by category or project, and search across metadata to find only the documents they are authorized to access.
+
+**Permission detail**: The document owner may manage their own documents; project managers may edit metadata, replace files, share documents, and delete documents within their projects; administrators may do the same globally.
 
 **Acceptance Scenarios**:
 
@@ -58,10 +69,13 @@ Users need to share documents with specific colleagues or teams and attach relev
 ### Edge Cases
 
 - What happens when a user uploads a file with a valid extension but corrupted content or a blocked malware scan result?
+- What happens when the locally available antivirus scanner cannot complete scanning an uploaded file?
 - How does the system respond when a user tries to access a document that was shared with them but later removed or no longer permitted?
 - What happens when a user submits missing required metadata, including an empty title or category?
 - How does the system handle a file upload that is interrupted mid-process or fails after a partial write?
 - What happens when a document is deleted, replaced, or shared while another user is viewing it?
+- What happens when an eligible manager restores a document during its 90-day soft-deletion window?
+- What happens when a user tries to restore a document after the 90-day retention window or access a document that has been permanently purged?
 
 ## Requirements *(mandatory)*
 
@@ -73,7 +87,7 @@ Users need to share documents with specific colleagues or teams and attach relev
 - **FR-004**: The system MUST show upload progress during file transfer and display a final success or error result after processing completes.
 - **FR-005**: The system MUST require a document title and category for each uploaded document and allow optional description, project association, and custom tags.
 - **FR-006**: The system MUST automatically capture upload date and time, uploader identity, file size, and file type metadata when a document is stored.
-- **FR-007**: The system MUST validate uploaded files before storage and reject unsafe or unsupported content using the organization’s security controls.
+- **FR-007**: The system MUST validate uploaded files before storage using a locally available antivirus scanner and reject unsafe or unsupported content. If scanning cannot be completed, the system MUST quarantine the file or reject the upload and MUST NOT make the file available for viewing or download.
 - **FR-008**: The system MUST store uploaded files securely, with generated internal identifiers and access rules that prevent unauthorized viewing or tampering.
 - **FR-009**: The system MUST allow users to view a list of their uploaded documents, including document title, category, upload date, file size, and associated project.
 - **FR-010**: The system MUST allow users to sort documents by title, upload date, category, and file size.
@@ -82,21 +96,24 @@ Users need to share documents with specific colleagues or teams and attach relev
 - **FR-013**: The system MUST allow authorized users to search for documents by title, description, tags, uploader, and associated project.
 - **FR-014**: The system MUST return only documents the current user is allowed to access in search results.
 - **FR-015**: The system MUST allow users with permission to download any document they can access and preview documents in supported browsers for common file types.
-- **FR-016**: The system MUST allow document owners to edit title, description, category, and tags after upload.
-- **FR-017**: The system MUST allow authorized users to replace an uploaded document with a revised version without changing the document’s ownership and project association unless intentionally changed.
-- **FR-018**: The system MUST allow document owners to delete their own documents and permit project managers to delete documents within their projects after confirmation.
-- **FR-019**: The system MUST allow document owners to share documents with specific users or teams and notify recipients through the in-app notification system.
+- **FR-016**: The system MUST allow authorized users to edit title, description, category, and tags after upload. Document owners, project managers for the document's project, and administrators globally may update metadata for the documents they can manage.
+- **FR-017**: The system MUST allow authorized users to replace an uploaded document with a revised version without changing the document’s ownership and project association unless intentionally changed. Document owners, project managers for the document’s project, and administrators globally may replace files for the documents they can manage.
+- **FR-018**: The system MUST allow authorized users to delete documents after confirmation. Document owners may delete their own documents, project managers may delete documents within their projects, and administrators may delete documents globally.
+- **FR-019**: The system MUST allow authorized users to share documents with specific users or teams and notify recipients through the in-app notification system. Document owners, project managers for the document’s project, and administrators globally may share documents they can manage.
 - **FR-020**: The system MUST present shared documents in a clear shared-with-me section for recipients who are authorized to view them.
 - **FR-021**: The system MUST allow users to access and attach relevant documents from task detail views and associate them with the task’s project context.
 - **FR-022**: The system MUST show recent documents and document counts in dashboard areas relevant to the current user while respecting permissions.
 - **FR-023**: The system MUST log upload, download, deletion, and share events for audit and reporting purposes.
 - **FR-024**: The system MUST support reporting for document activity, including the most uploaded file types, the most active uploaders, and document access patterns for administrators.
 - **FR-025**: The system MUST meet the stated performance targets for upload, browsing, search, and preview while handling typical dashboard workloads.
-- **FR-026**: The system MUST enforce role-based permissions consistently across upload, access, management, sharing, and reporting actions.
+- **FR-026**: The system MUST enforce role-based permissions consistently across upload, access, management, sharing, and reporting actions: document owners may manage their own documents; project managers may manage documents associated with their projects; administrators may oversee and manage documents globally; and the authorized roles above may edit metadata, replace files, share documents, and delete documents within their permitted scope. Users without one of these permissions MUST NOT manage the document.
+- **FR-027**: The system MUST soft-delete a document when an authorized owner, project manager, or administrator deletes it, retaining the document record and stored file for 90 days while preventing ordinary viewing, downloading, searching, and sharing.
+- **FR-028**: The system MUST allow document owners to restore their own soft-deleted documents, project managers to restore soft-deleted documents within their project, and administrators to restore any soft-deleted document during the 90-day retention window; restored documents MUST recover their prior metadata, ownership, project association, and access permissions.
+- **FR-029**: The system MUST permanently purge both the document record and its stored file after 90 days of soft deletion, and MUST reject or report restore requests made after permanent purge.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Document**: Represents a stored work file, including title, description, category, project association, uploader, file metadata, upload date, tags, and access permissions.
+- **Document**: Represents a stored work file, including title, description, category, project association, uploader, file metadata, upload date, tags, access permissions, and lifecycle state (active, soft-deleted, or permanently purged) with the soft-deletion timestamp.
 - **Project**: Represents the business context under which documents may be uploaded, shared, and viewed by assigned team members.
 - **User**: Represents a dashboard user whose role determines what document actions they may take, including upload, share, and administrative review.
 - **Document Share**: Represents a permission relationship between a document and a user or team so the document may be viewed or downloaded by recipients.
@@ -120,12 +137,12 @@ Users need to share documents with specific colleagues or teams and attach relev
 - Project and team membership data already exist and can be used to control document access.
 - The dashboard environment supports local file storage for the training application while keeping the design compatible with future storage abstraction.
 - Administrators need access to activity and audit data to support compliance, internal reviews, and operational reporting.
+- Soft-deleted documents and their stored files remain recoverable for exactly 90 days; after that period, both are permanently purged.
 
 ## Out of Scope
 
 - Real-time collaborative document editing or multi-user co-authoring.
-- Version history, rollback, or document restore workflows.
+- Version history or rollback workflows.
 - Advanced approval routing or formal document lifecycle management.
 - External third-party storage integrations beyond the planned future abstraction.
 - Mobile-specific document features beyond the web-based dashboard experience.
-
