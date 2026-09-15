@@ -135,3 +135,52 @@ function Test-DirHasFiles {
     }
 }
 
+# Resolve a template name to the highest-priority available template file.
+function Resolve-Template {
+    param(
+        [Parameter(Mandatory = $true)][string]$TemplateName,
+        [Parameter(Mandatory = $true)][string]$RepoRoot
+    )
+
+    if ($TemplateName -notmatch '^[a-z0-9-]+$') {
+        return $null
+    }
+
+    $templatesRoot = Join-Path $RepoRoot '.specify/templates'
+    $override = Join-Path $templatesRoot "overrides/$TemplateName.md"
+    if (Test-Path -LiteralPath $override -PathType Leaf) {
+        return $override
+    }
+
+    $extensionsRoot = Join-Path $RepoRoot '.specify/extensions'
+    if (Test-Path -LiteralPath $extensionsRoot -PathType Container) {
+        foreach ($extension in Get-ChildItem -LiteralPath $extensionsRoot -Directory | Sort-Object Name) {
+            $candidate = Join-Path $extension.FullName "templates/$TemplateName.md"
+            if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+                return $candidate
+            }
+        }
+    }
+
+    $core = Join-Path $templatesRoot "$TemplateName.md"
+    if (Test-Path -LiteralPath $core -PathType Leaf) {
+        return $core
+    }
+
+    return $null
+}
+
+# Resolve a template to UTF-8 content using the same priority as Resolve-Template.
+function Resolve-TemplateContent {
+    param(
+        [Parameter(Mandatory = $true)][string]$TemplateName,
+        [Parameter(Mandatory = $true)][string]$RepoRoot
+    )
+
+    $templatePath = Resolve-Template -TemplateName $TemplateName -RepoRoot $RepoRoot
+    if ($null -eq $templatePath) {
+        return $null
+    }
+
+    return [System.IO.File]::ReadAllText($templatePath, [System.Text.Encoding]::UTF8)
+}
